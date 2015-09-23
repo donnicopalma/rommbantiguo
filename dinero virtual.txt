@@ -1,0 +1,185 @@
+A ver si esto te sirve para sumarlos todos o restarlos todos de una 'tacada'. Ponlo a prueba:
+UPDATE almacen, entradas
+SET almacen.cantidad=almacen.cantidad + entradas.cantidad WHERE almacen.codigo=entradas.codigo
+Y para restar
+UPDATE almacen, salidas
+SET almacen.cantidad=almacen.cantidad - salidas.cantidad WHERE almacen.codigo=salidas.codigo
+Te las hace todas de un golpe. Pero si quieres limitarlo a un solo producto, por ej. al que tiene código 1:
+SET almacen.cantidad=almacen.cantidad + entradas.cantidad WHERE almacen.codigo=entradas.codigo AND almacen.codigo = 1
+UPDATE almacen, salidas
+SET almacen.cantidad=almacen.cantidad - salidas.cantidad WHERE almacen.codigo=salidas.codigo AND almacen.codigo = 1
+
+EDITO PARA CORREGIR:
+Como los datos los metes mediante un formulario,
+haces dos consultas, una para INSERTAR en cada tabla y otra para ALMACÉN
+resulta muy fácil sumar o restar en la tabla almacen mediante una condicional del tipo... en caso de que sea entradas el dato de formulario
+INSERT INTO entradas (idproducto, cantidad) VALUES ($codigoformulario, $cantidadformulario)//etc.
+y la lanzas;
+y luego otra consulta de actualización de datos
+UPDATE almacen SET cantidad = cantidad + $cantidadformulario WHERE almacen.codigo=$codigoformulario
+y la lanzas
+ambos datos te los traes por POST del formulario
+en caso de que sea salidas
+INSERT INTO salidas (idproducto, cantidad) VALUES ($codigoformulario, $cantidadformulario)//etc.
+y la lanzas;
+y luego otra consulta de actualización de datos
+UPDATE almacen SET cantidad = cantidad - $cantidadformulario WHERE almacen.codigo=$codigoformulario
+y la lanzas
+ambos datos te los traes por POST del formulario, me refiero a los datos que rellenan las variables $codigoformulario y $cantidadformulario
+Así será mejor, olvida la primera propuesta, pensada para tres tablas ya cerradas...
+
+
+
+
+
+
+
+el formulario llama a una pagina llamada insrtar_datos_salidas.php que es el que hace las salidas por ejemplo, y lo tengo programado así:
+
+"<?php
+
+// Primero comprobamos que ningún campo esté vacío y que todos los campos existan.
+
+if(isset($_POST['cantidad']) && !empty($_POST['cantidad']) &&
+
+isset($_POST['descripcion']) && !empty($_POST['descripcion']) &&
+
+isset($_POST['obra']) && !empty($_POST['obra']) &&
+
+isset($_POST['codigo']) && !empty($_POST['codigo']) &&
+
+isset($_POST['operario']) && !empty($_POST['operario'])) {
+
+
+
+// Si entramos es que todo se ha realizado correctamente
+
+
+
+$link = mysql_connect("localhost","root","bucear");
+
+mysql_select_db("koisa",$link);
+
+
+
+// Con esta sentencia SQL insertaremos los datos en la base de datos
+
+mysql_query("INSERT INTO salidas (id,cantidad,descripcion,obra,codigo,operario)
+
+VALUES ('{$_POST['id']}','{$_POST['cantidad']}','{$_POST['descripcion']}','{$_POST['obra']}','{$_POST['codigo']}','{$_POST['operario']}')",$link);
+
+}
+
+//con esta sentencia SQL modifico los datos del almacen
+
+
+
+mysql_query("UPDATE almacen SET cantidad = cantidad - $cantidadformulario WHERE almacen.codigo=$codigoformulario",$link);
+
+
+
+$gracias_defecto="salidas.php";
+
+if (is_null($pagina_gracias)){ header( "Location: $gracias_defecto" );}
+
+else{
+
+## Si hay página de gracias, cárgala
+
+header( "Location: $pagina_gracias" );
+
+}
+
+
+
+?>"
+
+
+creo que no hago algo bien por que solo me hace las salidas pero no modifica nada en la tabla del almacen.
+
+
+
+
+
+
+
+ ya entontre el fallo
+
+"<?php
+
+// Primero comprobamos que ningún campo esté vacío y que todos los campos existan.
+
+if(isset($_POST['cantidad']) && !empty($_POST['cantidad']) &&
+
+isset($_POST['descripcion']) && !empty($_POST['descripcion']) &&
+
+isset($_POST['obra']) && !empty($_POST['obra']) &&
+
+isset($_POST['codigo']) && !empty($_POST['codigo']) &&
+
+isset($_POST['operario']) && !empty($_POST['operario'])) {
+
+
+
+// Si entramos es que todo se ha realizado correctamente
+
+
+
+$link = mysql_connect("localhost","root","bucear");
+
+mysql_select_db("koisa",$link);
+
+
+
+// Con esta sentencia SQL insertaremos los datos en la base de datos
+
+mysql_query("INSERT INTO salidas (id,cantidad,descripcion,obra,codigo,operario)
+
+VALUES ('{$_POST['id']}','{$_POST['cantidad']}','{$_POST['descripcion']}','{$_POST['obra']}','{$_POST['codigo']}','{$_POST['operario']}')",$link);
+
+}
+
+//con esta sentencia SQL modifico los datos del almacen
+
+mysql_query("UPDATE almacen SET cantidad = cantidad - '{$_POST['cantidad']}' WHERE almacen.codigo='{$_POST['codigo']}'",$link);
+
+
+
+$gracias_defecto="salidas.php";
+
+if (is_null($pagina_gracias)){ header( "Location: $gracias_defecto" );}
+
+else{
+
+## Si hay página de gracias, cárgala
+
+header( "Location: $pagina_gracias" );
+
+}
+
+
+
+?>"
+
+
+muchisimas gracias por gran ayuda, andube navegando por varios foros y nadie supo encontrar la solucion
+varias cosas
+
+
+
+
+
+
+
+Código PHP
+
+// Con esta sentencia SQL insertaremos los datos en la base de datos
+
+mysql_query("INSERT INTO salidas (id,cantidad,descripcion,obra,codigo,operario)
+
+VALUES ($_POST['id'],$_POST['cantidad'],'{$_POST['descripcion']}','{$_POST['obra']}','{$_POST['codigo']}','{$_POST['operario']}')",$link);//ojo, porque los campos numéricos de MySQL debes cargarlos con una variable sin comillas. Observa que las he quitado de $POST_['id'] y de la cantidad, pues imagino que serán numéricos.
+
+
+mysql_query("UPDATE almacen SET cantidad = cantidad - $_POST ['cantidad'] WHERE almacen.codigo=$_POST ['codigo']",$link);//has puesto los mismos nombres que te puse yo. Los nombres de tablas y campos debes acomodarlos a lo traído de tu formulario y a los campos de las tablas de tu base de datos. Imagino que codigo es un campo texto en tus tablas, aunque si no lo es, tendrías que quitar también las comillas
+
+}//cierras el if después, no antes.

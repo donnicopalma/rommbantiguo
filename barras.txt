@@ -1,0 +1,56 @@
+
+<style>
+<!--
+body
+{
+scrollbar-face-color: #C0C0C0;
+scrollbar-arrow-color: #828282;
+scrollbar-3dlight-color: #EFEFEF;
+scrollbar-shadow-color: #828282;
+scrollbar-darkshadow-color: #CBCBCB;
+scrollbar-track-color: #E7E7E7;
+}
+//-->
+</style>
+
+Si pones este kodigo los enlaces de texto kambian de kolor al pazar el puntero:
+
+<style type=text/css>A {
+FONT-WEIGHT: bold; COLOR: #4A6BA5; TEXT-DECORATION: none
+}
+A:hover {
+FONT-WEIGHT: bold; COLOR: #0099FF; TEXT-DECORATION: none
+}
+</style>
+
+y este por si tienes algun formulariio kambia el aspecto de botones, campos de texto etc...
+<STYLE>
+<!--
+select
+{
+font-family : Verdana, arial, Helvetica;
+font-size : 10; color : #000033;
+font-weight : bold;
+border-color : #999999;
+border-width : 1;
+background-color : #EEEEEE
+}
+input
+{
+font-family : Verdana, arial, Helvetica;
+font-size : 10; color : #000033;
+font-weight : bold; border-color : #999999;
+border-width : 1;
+background-color : #EEEEEE
+}
+textarea
+{
+font-family : Verdana, arial, Helvetica;
+font-size : 10; color : #000033;
+font-weight : bold;
+border-color : #999999;
+border-width : 1;
+background-color : #EEEEEE
+}
+//-->
+</STYLE>

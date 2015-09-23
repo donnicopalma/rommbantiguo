@@ -1,0 +1,35 @@
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||
+|||                                                 |||
+|||   Uploader v.10 by akuatik (admin@akuatik.net)  |||
+|||                                                 |||
+||| Dedicado al canal #php_para_torpes del          |||
+||| irc.irc-hispano.org                             |||
+|||                                                 |||
+||| disponible en http://php-hispano.net            |||
+|||               http://akuatik.net                |||
+|||                                                 |||
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+REQUISITOS:
+ - Apache con soporte PHP 4.2.x
+
+
+INSTALACIÓN:
+
+Bueno esto es bastante sencillo:
+
+1º abrid el archivo upl2.php con un 
+editor, el notepad mismo y lo configurais a vuestro gusto
+
+2º abrid con el explorer el archivo upload.php ejemplo:
+  http://midominio.com/carpetadeluploader/upload.php
+
+NOTA: 
+ Puedes modificar el script a tu antojo siempre y cuando menciones
+ su origen y autor ;o))
+
+======================================
+Para BUGS etc admin@akuatik.net      =
+======================================
+
+Más scrips en http://php-hispano.net !! ;o)

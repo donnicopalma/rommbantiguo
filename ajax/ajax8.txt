@@ -1,0 +1,279 @@
+
+Siguiendo con nuestro manual de Ajax y PHP utilizando las librerías Xajax, vamos a ver como hacer aplicaciones web que utilicen variables de sesión. Para realizar el ejemplo hemos construido un juego del ahorcado, para adivinar palabras. En el juego tendremos que meter varias variables en la sesión, como la palabra a adivinar o los fallos que lleva el jugador.
+
+El trabajo con sesiones en Ajax y en concreto utilizando el framework de Xajax, no difiere del que ya conocemos para aplicaciones PHP generales, en resumen:
+
+    * 1) Tenemos que iniciar la sesión antes de enviar ninguna información o texto al navegador.
+
+      session_start();
+
+    * 2) Tenemos que acceder a variables de sesión a través de $_SESSION.
+
+      $_SESSION["nombre_variable"] = "valor cualquiera"; 
+
+En cuanto al juego del ahorcado, me figuro que es de sobra conocido por todos. Consiste en adivinar una palabra, probando letra a letra. Si la letra está en la palabra, se descubre y si la letra no estaba en la palabra se apunta un fallo. Se gana cuando se han adivinado todas las letras de la palabra y se pierde si se llega al máximo de los fallos permitidos.
+
+Podemos ver el ejemplo en marcha. En Xajax podremos utilizar variables de sesión de manera normal. Tenemos que asegurarnos que la sesión se abra, por lo que vamos a iniciar el código con la apertura de la sesión. Luego meteremos el include con la librería xajax y la instanciación del objeto.
+
+<?
+session_start();
+
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+$xajax->setCharEncoding('ISO-8859-1');
+$xajax->decodeUTF8InputOn();
+
+Luego tendremos que crear una serie de funciones PHP, algunas para llamar como respuesta a acciones del usuario por medio de Ajax. Tenemos dos funciones principales: 1) La función para iniciar el juego. Esta función la llamaremos al terminar de cargar la página y cuando el usuario pulse el botón "Reiniciar". Elige una palabra aleatoriamente, inicializa los fallos, los aciertos, etc. Todas esas variables que se inicializan se tienen que conservar durante todo el juego, por lo que se guardan en variables de sesión.
+
+function iniciar(){
+   $palabras = array("murciélago", "otorrinolaringologo", "constitución", "deshidratación", "laboratorio", "acomodarse", "microperforado","descontrolados", "superproducción");
+   //defino un número aleatorio para sacar una palabra entre las posibles
+   mt_srand(time());
+   $indice_aleatorio = mt_rand(0,count($palabras)-1);
+   
+   //creo variable de sesión con la palabra
+   $_SESSION["palabra"] = $palabras[$indice_aleatorio];
+   //creo variable de sesión con los aciertos
+   $_SESSION["aciertos"] = array();
+   //creo una variable con el número de fallos
+   $_SESSION["fallos"] = 0;
+   //creo la variable para decir que no ha perdido
+   $_SESSION["sin_jugar"] = false;
+   
+   //genero lo que se verá de la palabra
+   $palabra_vista = genera_palabra_aciertos();
+   $fallos_actuales = genera_fallos_actuales();
+   
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   $respuesta->addAssign("palabra","innerHTML",$palabra_vista);
+   $respuesta->addAssign("fallos","innerHTML",$fallos_actuales);
+   return $respuesta;
+}
+
+Hay que fijarse en el momento que se crean las variables de sesión, con el array asociativo $_SESSION["indice_de_variable"], tal como estamos acostumbrados a hacer habitualmente.
+
+Luego nos fijamos en que se genera la palabra con los aciertos y los fallos actuales y se meten por ajax como contenidos de las capas, con el método addAssign() de xajax.
+
+$respuesta->addAssign("palabra","innerHTML",$palabra_vista);
+$respuesta->addAssign("fallos","innerHTML",$fallos_actuales);
+
+Las particularidades de xajax las venimos comentando en artículos anteriores del manual de Xajax.
+
+2) La función para probar una letra, para ver si está en la palabra buscada. Esta función la llamaremos desde Javascript con Ajax cuando el usuario escriba una letra y pulse el botón para probarla.
+
+Veremos que hace uso de las variables de sesión creadas en la función anterior, de la manera habitual que venimos trabajando, con el array asociativo $_SESSION.
+
+function probar_letra($letra){
+   global $fallos_permitidos;
+   
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   
+   //compruebo que he recibido una letra
+   if($_SESSION["sin_jugar"]){
+      $advierte_perdido = "<span style='color:red'>Ya has terminado!</span><br>" . genera_fallos_actuales() . "";
+      $respuesta->addAssign("fallos","innerHTML",$advierte_perdido);
+   }elseif (strlen($letra)!=1){
+      $envia_letra = "<span style='color:red'>No he recibido una letra!</span><br>" . genera_fallos_actuales();
+      $respuesta->addAssign("fallos","innerHTML",$envia_letra);
+   }else{
+      //miro si la letra está entre las de la palabra
+      if (strpos($_SESSION["palabra"],$letra) === false){
+         //es que no estaba
+         $_SESSION["fallos"] ++;
+         //actualizo los fallos
+         $fallos_actuales = genera_fallos_actuales();
+         $respuesta->addAssign("fallos","innerHTML",$fallos_actuales);
+         //compruebo que no me haya pasado de fallos
+         if ($_SESSION["fallos"] == $fallos_permitidos){
+            //si ha perdido, le muestro la palabra
+            $palabra_entera = "Has perdido! la palabra era: <b>" . genera_palabra_entera() . "</b>";
+            $respuesta->addAssign("palabra","innerHTML",$palabra_entera);
+            $_SESSION["sin_jugar"] = true;
+         }
+      }else{
+         //es que la letra está en la cadena
+         $_SESSION["aciertos"][count($_SESSION["aciertos"])] = $letra;
+         //genero lo que se verá de la palabra
+         $palabra_vista = genera_palabra_aciertos();
+         //compruebo si has ganado ya
+         if (strpos($palabra_vista,"_")===false){
+            //si no hay un "_" en la palabra vista es que ya ha visto todas las letras
+            $palabra_vista = "Has ganado! la palabra es: <b>" . $palabra_vista . "</b>";
+            $_SESSION["sin_jugar"] = true;
+         }
+         $respuesta->addAssign("palabra","innerHTML",$palabra_vista);
+      }
+   }
+   return $respuesta;
+}
+
+La función es un poco larga, porque implementa casi toda la lógica del juego. Ahora no vamos a dar explicaciones sobre la lógica del juego del ahorcado, pero podemos ver que la función está comentada, así se pueda entender qué se hace en cada paso.
+
+Comprobaremos que se van accediendo a las variables de sesión y que se van generando respuestas a través de los métodos del objeto xajaxResponse.
+
+Conclusión sobre variables de sesión en Ajax
+
+Es indiferente que estemos trabajando dentro de Ajax por lo que respecta al manejo de la sesión con PHP. Las variables de sesión almacenan sus valores y los recuerdan sin problemas durante toda la ejecución de la aplicación, en las distintas llamadas generadas a PHP a través de Ajax
+
+El juego del ahorcado tiene cierta complejidad, en la que no hemos querido ahondar demasiado. Todavía habría que hacer cosas importantes para que fuera totalmente funcional, como la gestión de acentos para asegurarse que, cuando el usuario pruebe si hay una vocal, nos muestre la vocal tanto si está acentuada como si no. En el juego actual si probamos, por ejemplo la "e" no nos mostraría la "é" (e con tilde), si es que la hay.
+
+Una vez más mostramos el ejemplo en marcha pulsando este enlace.
+
+Veremos aquí el código completo del juego, que nos puede dar más pistas sobre el trabajo con PHP y Xajax.
+
+<?
+session_start();
+
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+$xajax->setCharEncoding('ISO-8859-1');
+$xajax->decodeUTF8InputOn();
+
+$fallos_permitidos=5;
+
+function iniciar(){
+   $palabras = array("murciélago", "otorrinolaringologo", "constitución", "deshidratación", "laboratorio", "acomodarse", "microperforado","descontrolados", "superproducción");
+   //defino un número aleatorio para sacar una palabra entre las posibles
+   mt_srand(time());
+   $indice_aleatorio = mt_rand(0,count($palabras)-1);
+   
+   //creo variable de sesión con la palabra
+   $_SESSION["palabra"] = $palabras[$indice_aleatorio];
+   //creo variable de sesión con los aciertos
+   $_SESSION["aciertos"] = array();
+   //creo una variable con el número de fallos
+   $_SESSION["fallos"] = 0;
+   //creo la variable para decir que no ha perdido
+   $_SESSION["sin_jugar"] = false;
+   
+   //genero lo que se verá de la palabra
+   $palabra_vista = genera_palabra_aciertos();
+   $fallos_actuales = genera_fallos_actuales();
+   
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   $respuesta->addAssign("palabra","innerHTML",$palabra_vista);
+   $respuesta->addAssign("fallos","innerHTML",$fallos_actuales);
+   return $respuesta;
+}
+
+function genera_palabra_aciertos(){
+   $cadena_palabra="";
+   //para cada una de las letras de la palabra a buscar
+   for ($i=0; $i<strlen($_SESSION["palabra"]); $i++){
+      //si la letra está en los aciertos, la muestro
+      if (in_array(substr($_SESSION["palabra"],$i,1), $_SESSION["aciertos"])){
+         //si la letra actual está en el array de aciertos, la muestro
+         $cadena_palabra .= " " . substr($_SESSION["palabra"],$i,1) . " ";
+      }else{
+         //si la letra no está en el array de aciertos, no la muestro
+         $cadena_palabra .= " _ ";
+      }
+   }
+   return $cadena_palabra;
+}
+
+function genera_palabra_entera(){
+   $cadena_palabra="";
+   //para cada una de las letras de la palabra a buscar
+   for ($i=0; $i<strlen($_SESSION["palabra"]); $i++){
+      $cadena_palabra .= " " . substr($_SESSION["palabra"],$i,1) . " ";
+   }
+   return $cadena_palabra;
+}
+
+function genera_fallos_actuales(){
+   global $fallos_permitidos;
+   $factuales = "Fallos: " . $_SESSION["fallos"] . "/" . $fallos_permitidos;
+   return $factuales;
+}
+
+function probar_letra($letra){
+   global $fallos_permitidos;
+   
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   
+   //compruebo que he recibido una letra
+   if($_SESSION["sin_jugar"]){
+      $advierte_perdido = "<span style='color:red'>Ya has terminado!</span><br>" . genera_fallos_actuales() . "";
+      $respuesta->addAssign("fallos","innerHTML",$advierte_perdido);
+   }elseif (strlen($letra)!=1){
+      $envia_letra = "<span style='color:red'>No he recibido una letra!</span><br>" . genera_fallos_actuales();
+      $respuesta->addAssign("fallos","innerHTML",$envia_letra);
+   }else{
+      //miro si la letra está entre las de la palabra
+      if (strpos($_SESSION["palabra"],$letra) === false){
+         //es que no estaba
+         $_SESSION["fallos"] ++;
+         //actualizo los fallos
+         $fallos_actuales = genera_fallos_actuales();
+         $respuesta->addAssign("fallos","innerHTML",$fallos_actuales);
+         //compruebo que no me haya pasado de fallos
+         if ($_SESSION["fallos"] == $fallos_permitidos){
+            //si ha perdido, le muestro la palabra
+            $palabra_entera = "Has perdido! la palabra era: <b>" . genera_palabra_entera() . "</b>";
+            $respuesta->addAssign("palabra","innerHTML",$palabra_entera);
+            $_SESSION["sin_jugar"] = true;
+         }
+      }else{
+         //es que la letra está en la cadena
+         $_SESSION["aciertos"][count($_SESSION["aciertos"])] = $letra;
+         //genero lo que se verá de la palabra
+         $palabra_vista = genera_palabra_aciertos();
+         //compruebo si has ganado ya
+         if (strpos($palabra_vista,"_")===false){
+            //si no hay un "_" en la palabra vista es que ya ha visto todas las letras
+            $palabra_vista = "Has ganado! la palabra es: <b>" . $palabra_vista . "</b>";
+            $_SESSION["sin_jugar"] = true;
+         }
+         $respuesta->addAssign("palabra","innerHTML",$palabra_vista);
+      }
+   }
+   return $respuesta;
+}
+
+//registramos funciones
+$xajax->registerFunction("iniciar");
+$xajax->registerFunction("probar_letra");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+<html>
+<head>
+   <title>Ahorcado Ajax</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body onload="xajax_iniciar()">
+<h1>Ahorcado en Ajax</h1>
+<div id="palabra">
+</div>
+<br>
+<div id="formulario">
+<form id="formulario" onsubmit="return false;">
+Escribe una letra: <input type="text" name="letra" size=2 maxlength="1">
+<br>
+<input type="button" value="Probar letra" onclick="xajax_probar_letra(this.form.letra.value);this.form.letra.value=''">
+</form>
+</div>
+<br>
+<div id="fallos">
+</div>
+<br>
+
+<form id="reiniciar" onsubmit="return false;">
+<input type="button" value="reiniciar" onclick="xajax_iniciar()">
+</form>
+
+
+</body>
+</html>

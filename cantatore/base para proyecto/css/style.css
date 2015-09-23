@@ -1,0 +1,47 @@
+@charset "UTF-8";
+/* CSS Document */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilos para dispositivos de tipo ipad en formato portrait */
+@media only screen and (max-width: 768px) {
+
+}
+
+
+
+
+
+
+/* Estilos para smartphones tipo i-phone 4 */
+@media only screen and (max-width: 640px) {
+
+
+}

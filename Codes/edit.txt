@@ -1,0 +1,41 @@
+Editar
+La edición de datos en mysql, combina opciones que hemos visto al Insertar datos a MySQL y en la 
+consulta MySQL, tendremos que hacer una consulta cómo la siguiente:
+ 
+ 000 
+	
+UPDATE tabla SET campo = 'valor' WHERE condicion
+ 
+ 
+Como veis, volvemos a utilizar la clausula WHERE para escojer las entradas que hay que editar,
+podemos actualizar varios campos de la siguiente manera:
+ 
+ 000 
+	
+UPDATE tabla SET campo = 'valor', campo2 = 'valor2' WHERE condicion
+ 
+ 
+El metodo no tiene mas secretos que esto, veamos un ejemplo real para ver cómo funciona exactamente
+desde PHP:
+ 
+	
+<?php 
+$sql = "UPDATE agenda SET telefono = 555405181 WHERE nombre = 'eloi'"; 
+mysql_query($sql,$db); 
+?> 
+ 
+ 
+Recordar que $db contiene un identificador de la conexión que hemos explicado anteriormente
+
+Borrar
+Borrar unas determinadas de una tabla de MySQL es incluso más sencillo que editarlas, pues solo es
+nescesario indicar que entradas queremos borrar con una clausula WHERE y en que tabla lo haremos, y
+esto junto con la palabra DELETE FROM nos darán el resultado que esperamos:
+ 
+ 000 
+	
+DELETE FROM tabla WHERE condicion
+ 
+ 
+No creo que sea nescesario poner el ejemplo de este caso, si aún asi salen dudas consultar en el
+foro.

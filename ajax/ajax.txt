@@ -1,0 +1,129 @@
+Estamos viendo algunos ejemplos de Ajax utilizado junto con PHP para crear aplicaciones web 
+avanzadas, ayudándonos de la clase xajax, que facilita bastante la programación.
+
+Ahora vamos a ver cómo procesar un formulario en una página web sin que se tenga que recargar la 
+página, es decir, enviar al servidor los datos adjuntados por el usuario en el formulario, 
+procesarlos con PHP y luego devolver una salida al usuario dependiendo de los datos introducidos. 
+Todo sin cambiar la página en la que estaba el usuario.
+
+Vimos en un artículo pasado como realizar la página más básica para usar Ajax con PHP de una manera 
+sencilla utilizando xajax. Por ello vamos a dar por entendidos esos puntos. En este caso vamos a 
+explicar las particularidades del envío de formularios con Ajax.
+
+Aprendimos en el artículo pasado a llamar a funciones PHP desde Javascript. Ahora lo que tenemos 
+que hacer es llamar a una función PHP para que procese un formulario. La llamada la seguiremos 
+haciendo mediante Javascript cuando el usuario pulse el botón de enviar. La particularidad de este 
+caso de envío y procesamiento de formularios con Ajax es la manera de enviar y recoger los datos
+del formulario.
+
+Enviar los datos del formulario a PHP con xajax
+
+Podemos ver aquí el código del formulario:
+
+<div id="mensaje">
+<form id="formulario">
+Nombre: <input type="text" name="nombre">
+<br>
+Apellidos: <input type="text" name="apellidos">
+<br>
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues('formulario'))">
+</form>
+</div>
+
+Como vemos, tenemos un par de campos de texto y un botón, que se encargará lanzar el proceso para enviar y procesar los datos. Para ello, el botón tiene un comando para el evento onclick, que trataremos de explicar.
+
+Ahora con xajax vamos a disponer de un método Javascript llamado xajax.getFormValues(ID_FORMULARIO), que recibe el identificador del formulario que se desean obtener los datos. Esta función nos sirve generar los datos del formulario que debemos enviar para su procesamiento. En nuestro caso el formulario tiene el id="formulario", así que lo invocamos:
+
+xajax.getFormValues('formulario')
+
+Los datos del formulario los tenemos que pasar a la función que se encarga de procesarlos, que es 
+una función que hemos escrito con PHP y luego hemos registrado en el objeto xajax. Veremos esa 
+función a continuación.
+
+Recibir los datos del formulario enviado con xajax
+
+Desde PHP estaríamos acostumbrados a recoger los datos de un formulario con $_POST o $_GET, pero 
+ahora lo vamos a tener que hacer de una manera distinta.
+
+Como hemos visto antes, a la función que procesa los el formulario se le envía un parámetro con 
+los datos. Pues ese mismo parámetro es el que tenemos que utilizar para recibir los datos del
+formulario. Los datos del formulario nos llegan como un array asociativo, por tanto, cuando 
+programemos la función en PHP, el método de trabajo será similar al que utilizaríamos con $_POST y 
+$_GET, que también son arrays asociativos.
+
+function procesar_formulario($form_entrada){
+   $salida = "Gracias por enviarnos tus datos. Hemos procesado esto:<p>";
+   $salida .= "Nombre: " . $form_entrada["nombre"];
+   $salida .= "<br>Apellidos: " . $form_entrada["apellidos"];
+   
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("mensaje","innerHTML",$salida);
+   
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+
+La función que procesa el formulario se llama procesar_formulario() y recibe un parámetro que es el array asociativo con los datos del formulario. Esa función compone una salida y luego la devuelve con Ajax.
+
+Para ello crea un objeto de la clase xajaxResponse y con el método addAssign("mensaje","innerHTML",$salida) consigue que en la capa con id="mensaje" se muestre la salida del procesamiento del formulario.
+
+No hay que olvidarse de registrar la función en el objeto xajax
+
+//registramos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("procesar_formulario");
+
+Pero todas estas generalidades y códigos adicionales necesarios para utilizar xajax los hemos visto en el artículo anterior: Xajax: Ajax para PHP.
+
+El código completo de este ejemplo es el siguiente:
+
+<?
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+
+function procesar_formulario($form_entrada){
+   $salida = "Gracias por enviarnos tus datos. Hemos procesado esto:<p>";
+   $salida .= "Nombre: " . $form_entrada["nombre"];
+   $salida .= "<br>Apellidos: " . $form_entrada["apellidos"];
+   
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("mensaje","innerHTML",$salida);
+   
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+//registramos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("procesar_formulario");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+<html>
+<head>
+   <title>Enviar y procesar un formulario con Ajax y PHP</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body>
+<h1>Recibir y procesar formulario con Ajax y PHP</h1>
+<div id="mensaje">
+<form id="formulario">
+Nombre: <input type="text" name="nombre">
+<br>
+Apellidos: <input type="text" name="apellidos">
+<br>
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues('formulario'))">
+</form>
+</div>
+
+</body>
+</html>

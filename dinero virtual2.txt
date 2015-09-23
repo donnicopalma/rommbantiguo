@@ -1,0 +1,41 @@
+<?php
+//Variables para conectarnos a la Base de Datos 
+
+
+$host = "localhost"; 
+$username = "****"; 
+$password = "****"; 
+$basedatos = "****"; 
+
+//Conectamos a la Base de datos 
+$db = mysql_connect($host, $username, $password); 
+mysql_select_db($basedatos, $db); 
+
+// Sacar info de la base de datos
+
+$query = mysql_query("SELECT * FROM php_stats_counters", $db); 
+
+while ($data = mysql_fetch_array($query)) 
+     { 
+    //siempre es bueno utilizar stripslashes para sacar info y addslashes para introducir info
+                 
+        echo $row['visits']+$row['no_count_visits']; 
+ } 
+?>
+
+
+
+
+echo $data['visits']-$data['no_count_visits'];
+
+
+
+
+
+<?php
+$query = mysql_query("SELECT * FROM php_stats_counters", $db);
+while ($data = mysql_fetch_array($query))
+     {
+        echo $data['visits'];
+ }
+?>

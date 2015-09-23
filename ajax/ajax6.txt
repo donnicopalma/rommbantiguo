@@ -1,0 +1,141 @@
+
+Este ejercicio viene a continuar el manual de utilización de xajax para programar aplicaciones Ajax con PHP. Lo que vamos a hacer es un sencillo ejemplo para crear un sistema por el que los visitantes puedan comentar un artículo de una página web. La idea es que todo el proceso de comentar el artículo permanezca en la misma página, de modo que el usuario no tenga que recargar la página para comentar el artículo.
+
+En un principio en la página no aparece el formulario para comentar el artículo, sino un enlace. Al pulsar el enlace se muestra el formulario en la página (siempre sin recargar el contenido de la página entera). Luego se envía el formulario y se procesa, también en la misma página.
+
+Para explicar este ejercicio tenemos que basarnos en otro ejercicio anterior, en el que enviábamos y procesábamos un formulario con Ajax y PHP. Lo nuevo en este artículo es la parte de mostrar un formulario en la misma página al pulsar un enlace.
+
+Vamos a tener este HTML, donde inicialmente no está el formulario, pero tenemos el enlace para mostrarlo.
+
+<div id="mensaje"></div>
+<br />
+<div id="capaformulario">
+<a href="#" onclick="xajax_muestra_formulario()">Escribe un comentario del artículo</a>.
+</div>
+
+El enlace llama a una función PHP que se ejecutará por medio de Ajax:
+
+function muestra_formulario(){
+   //creo el xajaxResponse para generar una salida
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   
+   $codigo_formul = '<form id="formulario">
+Nombre: <input type="text" name="nombre" />
+<br />
+Apellidos: <input type="text" name="apellidos" />
+<br />
+<textarea name="cuerpo"></textarea>
+<br />
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues(\'formulario\'))" />
+</form>
+';
+   //mostramos en capa capaformulario el texto código HTML del formulario
+   $respuesta->addAssign("capaformulario","innerHTML","$codigo_formul");
+   return $respuesta;
+   
+}
+
+En esta función se crea en una variable cadena, donde se introduce el código del formulario. Luego, con el método addAssign() del objeto clase xajaxResponse se actualiza la capa "capaformulario", para mostrar en la página el formulario.
+
+El resto del ejercicio es exactamente el mismo que para el artículo enviar y procesar un formulario con Ajax y PHP.
+
+Podemos ver el código completo a continuación.
+
+<?
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+$xajax->setCharEncoding('ISO-8859-1');
+$xajax->decodeUTF8InputOn();
+
+function muestra_formulario(){
+   //creo el xajaxResponse para generar una salida
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   
+   $codigo_formul = '<form id="formulario">
+Nombre: <input type="text" name="nombre" />
+<br />
+Apellidos: <input type="text" name="apellidos" />
+<br />
+<textarea name="cuerpo"></textarea>
+<br />
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues(\'formulario\'))" />
+</form>
+';
+   //mostramos en capa capaformulario el texto código HTML del formulario
+   $respuesta->addAssign("capaformulario","innerHTML","$codigo_formul");
+   return $respuesta;
+   
+}
+
+function procesar_formulario($form_entrada){
+   //creo el xajaxResponse para generar una salida
+   $respuesta = new xajaxResponse('ISO-8859-1');
+
+   //validación
+   $error_form = "";
+   if ($form_entrada["nombre"] == "")
+      $error_form = "Debes escribir tu nombre";
+   elseif ($form_entrada["apellidos"] == "")
+      $error_form = "Debes escribir tus apellidos";
+   elseif (strlen($form_entrada["cuerpo"]) < 10)
+      $error_form = "El comentario debe tener al menos 10 caracteres";
+      
+   //compruebo resultado de la validación
+   if ($error_form != ""){
+      //Hubo un error en el formulario
+      //en la capa donde se muestran mensajes, muestro el error
+      $respuesta->addAssign("mensaje","innerHTML","<span style='color:red;'>$error_form</span>");
+   }else{
+      //es que no hubo error en el formulario
+      $salida = "Hemos procesado esto:<p>";
+      $salida .= "Nombre: " . $form_entrada["nombre"];
+      $salida .= "<br>Apellidos: " . $form_entrada["apellidos"];
+      $salida .= "<br>Comentario: " . $form_entrada["cuerpo"];
+      
+      //mostramos en capa mensaje el texto que está todo correcto
+      $respuesta->addAssign("mensaje","innerHTML","<span style='color:blue;'>Todo correcto... Muchas gracias!</span>");
+      //escribimos en la capa con id="capaformulario" el texto que aparece en $salida
+      $respuesta->addAssign("capaformulario","innerHTML",$salida);
+      
+      //tenemos que devolver la instanciación del objeto xajaxResponse
+   }
+   return $respuesta;
+}
+//registramos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("muestra_formulario");
+$xajax->registerFunction("procesar_formulario");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+<html>
+<head>
+
+   <title>Enviar y procesar un formulario con Ajax y PHP</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body>
+<h1>Recibir y procesar formulario con Ajax y PHP</h1>
+Esto se supone que es un artículo, con muchas informaciones de lo que sea. Tiene principalmente texto.
+<p>
+En este ejemplo vamos a hacer un sistema para que se puedan realizar comentarios al artículo, pero estos comentarios los vamos a recoger con Ajax.
+<p>
+Utilizaremos Ajax para mostrar el formulario de contacto para escribir el formulario y también a la hora de recibir y procesar datos del formulario de alta del comentario.
+
+<div id="mensaje"></div>
+<br />
+<div id="capaformulario">
+<a href="#" onclick="xajax_muestra_formulario()">Escribe un comentario del artículo</a>.
+</div>
+
+</body>
+</html>
+
+El ejemplo puede verse en marcha en este enlace.

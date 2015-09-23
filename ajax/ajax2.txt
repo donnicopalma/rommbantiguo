@@ -1,0 +1,112 @@
+Artículo en el que se realiza un envío de formulario con Ajax y PHP y se inserta la información en 
+una base de datos MySQL.
+
+
+En este artículo vamos a resolver la duda de un usuario, que quería insertar en una base de datos 
+la información recibida de un formulario con Ajax. En realidad es un tema que no revierte ninguna 
+complicación, si ya conocemos el modo de trabajo de PHP con bases de datos, pues no varía nada que 
+estemos realiando las acciones a través de Ajax. Pero bueno, puede ser de utilidad explicarlo.
+
+La duda surgió a partir del artículo Enviar y procesar formulario con Ajax y PHP, por lo que será 
+necesario leer el artículo anterior para entender bien las generalidades del envío de formularios 
+con Ajax.
+
+Nota: En esta serie de artículos estamos utilizando la librería xajax, que sirve para trabajar con 
+Ajax en PHP de una manera muy simplificada. Las generalidades del uso de xajax las comentamos en el 
+artículo xajax: Ajax y PHP.
+
+Si quisiéramos, podríamos insertar la información recibida por el formulario en una base de datos. 
+Esto sólo implicaría un pequeño cambio en la función procesar_formulario() (ver artículo anterior), 
+para que realice el insert. En lugar de mostrar los datos por pantalla como hace en el ejemplo
+anterior, tendría que generar una sentencia SQL con el insert y ejecutarla.
+
+Tendríamos también que realizar una conexión con la base de datos donde queremos hacer el insert. 
+Esta conexión podríamos hacerla dentro de la misma función o fuera. En este pequeño código de la 
+función procesar_formulario() se muestra como podría ser el proceso de inserción de la información 
+en una base de datos MySQL:
+
+function procesar_formulario($form_entrada){
+   $connectid = mysql_connect("localhost", "root", "");
+   mysql_select_db("nombre_base_datos",$connectid);
+   $ssql = "insert into pais (nombre_pais) values ('" . $form_entrada["nombre"] . "')";
+   
+   if (mysql_query($ssql)){
+      $salida = "Insertado correctamente";
+   }else{
+      $salida = "No se ha insertado. Este es el error: " . mysql_error();
+   }
+   
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("mensaje","innerHTML",$salida);
+   
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+
+Pero la sentencia de conexión con la base de datos podría estar en otro lugar del código de la 
+página. En un supuesto que nuestra página realice accesos a base de datos en diversos lugares del 
+código, nos convendría realizar una conexión a la base de datos de manera global, que podamos 
+utilizar desde cualquier parte del código.
+
+A continuación se muestra el ejemplo completo, de enviar datos de un formulario por Ajax e 
+insertar el contenido en una base de datos MySQL. En este caso hemos hecho una variación en el 
+código para que la conexión a la base de datos se realice como variable global a la página y no 
+local a la función, así podríamos utilizar esa misma conexión en otros lugares del código PHP de 
+la página.
+
+<?
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+
+$connectid = mysql_connect("localhost", "root", "");
+mysql_select_db("guiarte_backup",$connectid);
+
+function procesar_formulario($form_entrada){
+   $ssql = "insert into pais (nombre_pais) values ('" . $form_entrada["nombre"] . "')";
+   
+   if (mysql_query($ssql)){
+      $salida = "Insertado correctamente";
+   }else{
+      $salida = "No se ha insertado. Este es el error: " . mysql_error();
+   }
+   
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("mensaje","innerHTML",$salida);
+   
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+//registramos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("procesar_formulario");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+<html>
+<head>
+   <title>Enviar y procesar un formulario con Ajax y PHP</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body>
+<h1>Recibir y procesar formulario con Ajax y PHP</h1>
+<div id="mensaje">
+<form id="formulario">
+Nombre de país: <input type="text" name="nombre">
+<br>
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues('formulario'))">
+</form>
+</div>
+
+</body>
+</html>

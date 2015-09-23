@@ -1,0 +1,184 @@
+
+Veamos otro ejemplo de uso de xajax, una librería que nos permite trabajar con Ajax y PHP de una manera sencilla. Este ejemplo pertenece a una serie de ejercicios que tratan de enseñar el trabajo con xajax, que comenzó en el artículo Xajax: Ajax para PHP.
+
+En este caso vamos a implementar una utilidad típica de los formularios de registro de usuarios en una web: validar un nombre de usuario. Cuando un visitante escribe un nombre de usuario en un formulario tenemos que comprobar si el nombre de usuario es válido y no ha sido repetido por otra persona que se registró anteriormente. Esto se puede hacer con Ajax de una manera muy usable para el visitante, de modo que se pueda comprobar el usuario antes de enviar el formulario para su procesamiento y sin que tenga que recargarse la página.
+
+Para hacernos una idea exacta del objetivo de este artículo podemos ver el ejemplo en marcha.
+
+El ejemplo en si es sencillo, pero requerirá de realizar unos cuantos pasos. Primero vamos a ver el formulario donde el usuario escribirá el nombre de usuario.
+
+
+<form name="formulario">
+<input type="text" name="usuario" size="20"> <div id="mensaje"></div>
+<br>
+<input type="button" value="Comprobar validez de usuario" onclick="javascript:xajax_validar_usuario(document.formulario.usuario.value)">
+</form>
+
+Tiene un campo de texto donde se debe escribir el nombre de usuario. Una capa con id="mensaje" donde mostraremos mensajes de error o validez, y un botón que habrá que pulsar para que se llame a la función que se encargará de comprobar el correo.
+
+Veamos ahora un par de funciones PHP que utilizaremos para las validaciones:
+
+
+function comprobar_permitidos($cadena){
+   $permitidos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+   for ($i=0; $i<strlen($cadena); $i++){
+      if (strpos($permitidos, substr($cadena,$i,1))===false){
+         //no es válido;
+         return false;
+      }
+   }
+   //si estoy aqui es que todos los caracteres son validos
+   return true;
+}
+
+Esta función comprueba si los caracteres de un nombre de usuario son válidos. Sólo se permiten alfanuméricos y el signo "-". Esta función no la voy a explicar, porque ya está comentada en el artículo Comprobar en PHP si una cadena tiene sólo el conjunto de caracteres permitido
+
+function comprobar_repetidos($cadena){
+   //esta función comprueba si se ha repetido un nombre de usuario
+   //se supone que aquí se debería hacer una búsqueda en base de datos para ver si hay repetidos
+   //nosotros para este ejemplo no vamos a conectar con base de datos
+   //simplemente comprobamos si la cadena es igual a unos valores literales
+   if ($cadena == "pepe" || $cadena == "jose" || $cadena == "juan"){
+      return false;
+   }
+   return true;
+}
+
+Esta otra función realiza una comprobación para ver si un usuario está repetido anteriormente. Lo lógico, como ya aparece comentado en el código de la propia función, es que hubiéramos realizado un acceso a base de datos para comprobar si el usuario está o no ya en uso en la base de datos. En este ejemplo, sin embargo, sólo hemos comprobado si el usuario es igual a los valores "pepe", "jose" y "juan". Será suficiente para por el momento, porque lo que nos interesa es entender cómo trabajar con xajax.
+
+Ahora vamos con lo importante, que es la función PHP que se encargará de comprobar la validez de un usuario y mostrar con Ajax los mensajes correspondientes, según el usuario sea válido o no.
+
+function validar_usuario($entrada){
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse('ISO-8859-1');
+   
+   if ($entrada == ""){
+      //escribimos en la capa con id="mensaje" que no se ha escrito nombre de usuario
+      $respuesta->addAssign("mensaje","innerHTML","Debes escribir algo como nombre de usuario");
+      //Cambiamos a rojo el color del texto de la capa mensaje
+      $respuesta->addAssign("mensaje","style.color","red");
+   }elseif (!comprobar_permitidos($entrada)){
+      //escribimos en la capa con id="mensaje" el error que el usuario tiene caracteres permitidos
+      $respuesta->addAssign("mensaje","innerHTML","El nombre de usuario tiene caracteres no permitidos");
+      //Cambiamos a rojo el color del texto de la capa mensaje
+      $respuesta->addAssign("mensaje","style.color","red");
+   }elseif (!comprobar_repetidos($entrada)){
+      //escribimos en la capa con id="mensaje" el error que el usuario está repetido
+      $respuesta->addAssign("mensaje","innerHTML","El nombre de usuario escrito ya está en uso");
+      //Cambiamos a rojo el color del texto de la capa mensaje
+      $respuesta->addAssign("mensaje","style.color","red");
+   }else{
+      //es que todo ha ido bien
+      //escribimos en la capa con id="mensaje" que todo ha ido bien
+      $respuesta->addAssign("mensaje","innerHTML","Todo correcto");
+      //Cambiamos a azul el color del texto de la capa mensaje
+      $respuesta->addAssign("mensaje","style.color","blue");
+   }
+   
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+
+Como podemos ver, primero creamos una instancia de xajaxResponse, para enviar respuestas Ajax a la página.
+
+Luego realiza varias comprobaciones de cosas que podrían fallar en un nombre de usuario, comenzando con la verificación de que el usuario no sea la cadena vacía. En cada comprobación que ha ido mal se hacen dos cosas:
+
+Primero se muestra un mensaje de error en la capa que tiene como identificador "mensaje".
+
+$respuesta->addAssign("mensaje","innerHTML","Debes escribir algo como nombre de usuario");
+
+Luego, se cambia el color de la capa a rojo para que el error se visualice en rojo y sea fácil de identificar. Esta es una utilidad interesante de xajax que todavía no habíamos visto anteriormente.
+
+$respuesta->addAssign("mensaje","style.color","red");
+
+Como podemos entender por la anterior instrucción, en realidad con xajax podemos acceder y modificar cualquier atributo de estilo de una capa desde PHP. Por ejemplo, para cambiar el color de fondo de una capa podríamos escribir esto:
+
+$respuesta->addAssign("mensaje","style.background","black");
+
+Si el usuario era válido simplemente mostramos otro mensaje, esta vez con un "Todo correcto" y actualizamos el color del texto a azul.
+
+Con esto ya tenemos hecho todo lo que habría que ver de este ejemplo, que no era nada difícil. Pero claro, necesitaremos entender perfectamente algunas de las particularidades de xajax que ya se explicaron en artículos anteriores.
+
+Podemos ver el código fuente completo aquí:
+
+
+<?
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+$xajax->setCharEncoding('ISO-8859-1');
+$xajax->decodeUTF8InputOn();
+
+function procesar_formulario($form_entrada){
+   //creo el xajaxResponse para generar una salida
+   $respuesta = new xajaxResponse('ISO-8859-1');
+
+   //validación
+   $error_form = "";
+   if ($form_entrada["nombre"] == "")
+      $error_form = "Debes escribir tu nombre";
+   elseif ($form_entrada["apellidos"] == "")
+      $error_form = "Debes escribir tus apellidos";
+   elseif (!isset($form_entrada["acepto"]))
+      $error_form = "Debes aceptar los términos y condiciones";
+      
+   //compruebo resultado de la validación
+   if ($error_form != ""){
+      //Hubo un error en el formulario
+      //en la capa donde se muestran mensajes, muestro el error
+      $respuesta->addAssign("mensaje","innerHTML","<span style='color:red;'>$error_form</span>");
+   }else{
+      //es que no hubo error en el formulario
+      $salida = "Hemos procesado esto:<p>";
+      $salida .= "Nombre: " . $form_entrada["nombre"];
+      $salida .= "<br>Apellidos: " . $form_entrada["apellidos"];
+      
+      //mostramos en capa mensaje el texto que está todo correcto
+      $respuesta->addAssign("mensaje","innerHTML","<span style='color:blue;'>Todo correcto... Muchas gracias!</span>");
+      //escribimos en la capa con id="capaformulario" el texto que aparece en $salida
+      $respuesta->addAssign("capaformulario","innerHTML",$salida);
+      
+      //tenemos que devolver la instanciación del objeto xajaxResponse
+   }
+   return $respuesta;
+}
+//registramos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("procesar_formulario");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+<html>
+<head>
+
+   <title>Enviar y procesar un formulario con Ajax y PHP</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body>
+<h1>Recibir y procesar formulario con Ajax y PHP</h1>
+<div id="mensaje">
+Rellena los datos de este formulario y pulsa "Enviar"
+</div>
+<br />
+<div id="capaformulario">
+<form id="formulario">
+Nombre: <input type="text" name="nombre" />
+<br />
+Apellidos: <input type="text" name="apellidos" />
+<br />
+<input type="checkbox" name="acepto" value="1" /> Acepto los términos y condiciones ;)
+<br />
+<input type="button" value="Enviar" onclick="xajax_procesar_formulario(xajax.getFormValues('formulario'))" />
+</form>
+</div>
+
+</body>
+</html>
+
+Podemos ver el ejemplo en marcha en una página aparte.

@@ -1,0 +1,59 @@
+Funciones  de roomba:
+
+
+cada 4 meses, un año.
+Elementos habitacion.
+Elementos fuera de habitacion.
+Habitacion.
+Edificio o comunidad de departamentos.
+Pueblo o ciudad.
+Zona
+Roomba Continente.
+
+
+
+Roomba Continente: 
+
+Desastres Naturales.
+Cambio de estaciones.
+Cambio de horas.
+Dia y noche.
+
+
+
+
+
+Zona: 
+
+Efectos segun clima en particular
+distintos cobros de impuesto.
+robos
+instalacion cercana de alguna marca, aumenta valor del barrio.
+
+
+
+
+Edificio o comunidad:
+
+Conserje, comportamiento, noticias referentes a el.
+Mantencion del edificio, gastos comunes.
+Devaluacion o sobrevaluacion de edificio segun comportamiento de vecinos. Segun sector
+
+
+Habitacion:
+
+Mantencion de habitacion (suciedad, deterioro)
+
+
+Elementos de habitacion y no habitacion:
+
+Venta y compra de segunda mano, ej. si yo quiero vender un closet que valia 100R y tiene 1 mes de antieguedad
+lo vendo a una funcion de .. Precio de Reventa - 1 R por dias = 100 - 30 = 70
+Pero hay cosas que se puedan sobrevaluar o devaluar segun prestigio del usuario, vecindad o zona segun sea el caso.
+Deterioro de elementos.
+
+
+
+
+
+

@@ -1,0 +1,20 @@
+CREATE TABLE `usuarios` (
+`id` INT( 4 ) NOT NULL AUTO_INCREMENT ,
+`pass` VARCHAR( 255 ) NOT NULL ,
+`user` VARCHAR( 255 ) NOT NULL ,
+`foto` VARCHAR( 255 ) NOT NULL ,
+`nombre` VARCHAR( 255 ) NOT NULL ,
+`apellidos` VARCHAR( 255 ) NOT NULL ,
+`fecha_nac` VARCHAR( 255 ) NOT NULL ,
+`ocup` VARCHAR( 255 ) NOT NULL ,
+`ocup_s` VARCHAR( 255 ) NOT NULL ,
+`pais` VARCHAR( 255 ) NOT NULL ,
+`region` VARCHAR( 255 ) NOT NULL ,
+`sexo` VARCHAR( 255 ) NOT NULL ,
+`zipcode` VARCHAR( 255 ) NOT NULL ,
+`nivel` INT( 4 ) NOT NULL ,
+`fecha_registro` VARCHAR( 255 ) NOT NULL ,
+`hora_registro` VARCHAR( 255 ) NOT NULL ,
+`IP` TINYTEXT NOT NULL ,
+INDEX ( `id` )
+) ENGINE = MYISAM ;

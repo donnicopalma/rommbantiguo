@@ -1,0 +1,109 @@
+No lo es. La lógica es simple. Al guardar los datos del usuario en la base de datos, guardas una 
+clave generada aleatoriamente. Generarla es tan simple como:
+
+
+Código PHP:
+$clave = md5(time().rand());  
+
+Luego, envias el mail por medio de PHPMailer o la función mail, indicándole esa clave al usuario.
+
+Creas una página que recoja la clave, del tipo pag.php?id=dshf7843ytrhg87reyhfdgyfd7, y actualizas 
+la base de datos, cambiando el estado de tu usuario a activo. Es todo
+
+
+
+Me parece que, el problema de eso es que otro usuario podría confirmar tu cuenta simplemente 
+conociendo tu id. Claro, ahora depende de qué es la id;si es el nombre d usuario sería demasiado 
+sencillo suplantar a alguien; lo que te voy a poner genera una id única para cada usuario, que 
+será función de su dirección ip y otros parámetros difíciles de suplantar.
+
+Tienes dos opciones:
+
+En ambas opciones, necesitarás un campo extra en la tabla usuario, que diga si se ha validado el
+ mail o no.
+
+1.- Además, deberás crear otro campo para guardar la idunica.
+
+2.- Yo lo implementé en una tabla aparte, llamada usuarios_temp, en la que guardo el login del
+ usuario, su clave única, y la fecha de cuando se registró (esto es por si quieres eliminar
+ usuarios que no hayan validado a las X horas).
+
+A continuación, cuando el usuario introduzca sus datos en el form. de registro , los guardas
+ en tu base de datos, rellenando el campo de idunica con esta función:
+
+funcion para generar una idunica
+
+Código PHP:
+//función para el mail 
+function getRealIP() 
+{ 
+   if( $_SERVER['HTTP_X_FORWARDED_FOR'] != '' ) 
+   { 
+      $client_ip = 
+         ( !empty($_SERVER['REMOTE_ADDR']) ) ? 
+            $_SERVER['REMOTE_ADDR'] 
+            : 
+            ( ( !empty($_ENV['REMOTE_ADDR']) ) ? 
+               $_ENV['REMOTE_ADDR'] 
+               : 
+               "unknown" ); 
+    
+      // los proxys van a&ntilde;adiendo al final de esta cabecera 
+      // las direcciones ip que van "ocultando". Para localizar la ip real 
+      // del usuario se comienza a mirar por el principio hasta encontrar 
+      // una dirección ip que no sea del rango privado. En caso de no 
+      // encontrarse ninguna se toma como valor el REMOTE_ADDR 
+    
+      $entries = split('[, ]', $_SERVER['HTTP_X_FORWARDED_FOR']); 
+    
+      reset($entries); 
+      while (list(, $entry) = each($entries)) 
+      { 
+         $entry = trim($entry); 
+         if ( preg_match("/^([0-9]+.[0-9]+.[0-9]+.[0-9]+)/", $entry, $ip_list) ) 
+         { 
+            // http://www.faqs.org/rfcs/rfc1918.html 
+            $private_ip = array( 
+                  '/^0./', 
+                  '/^127.0.0.1/', 
+                  '/^192.168..*/', 
+                  '/^172.((1[6-9])|(2[0-9])|(3[0-1]))..*/', 
+                  '/^10..*/'); 
+    
+            $found_ip = preg_replace($private_ip, $client_ip, $ip_list[1]); 
+    
+            if ($client_ip != $found_ip) 
+            { 
+               $client_ip = $found_ip; 
+               break; 
+            } 
+         } 
+      } 
+   } 
+   else 
+   { 
+      $client_ip = 
+         ( !empty($_SERVER['REMOTE_ADDR']) ) ? 
+            $_SERVER['REMOTE_ADDR'] 
+            : 
+            ( ( !empty($_ENV['REMOTE_ADDR']) ) ? 
+               $_ENV['REMOTE_ADDR'] 
+               : 
+               "unknown" ); 
+   } 
+    
+   return $client_ip; 
+    
+}//getRealIP()  
+
+En el mail que le mandes a tu usuario, debería haber un link parecido a esto:
+
+http://www.paginaconfirmacion.php?idunica=xxxxxxxxx
+
+En paginaconfirmacion.php recoges idunica con Get y compruebas que existe en tu base de datos esa 
+idunica. Ya sólo tienes que validar el usuario al que pertenece (poniendo el campo de validación a 
+1 o como lo hagas).
+
+Espero que te sirva tanto como me sirvió a mí.
+
+Un saludo!!

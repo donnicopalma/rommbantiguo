@@ -1,0 +1,192 @@
+Ajax es una tecnología que utiliza a su vez otra combinación de tecnologías, como XML y Javascript,
+para realizar peticiones de contenido o computación de servidor sin tener que recargar la página en
+la que está el usuario. Es una tecnología que permite una nueva gama de aplicaciones interactivas
+en la web, mucho más ricas y rápidas, dado que no precisamos recargar todo el contenido de una
+página para realizar peticiones al servidor.
+
+Referencia: Puedes ver qué es ajax en este artículo: Qué es AJAX
+Tenemos otros artículos que explican Ajax, puedes buscarlos con nuestro directorio, en la categoría
+Ajax.
+
+Si hemos intentado alguna vez trabajar con Ajax para programar una página web, habremos comprobado
+que la tarea se complica bastante, teniendo que realizar diferentes trozos de código en distintos
+lenguajes de programación y en distintos archivos. Todo esto puede provocar dolores de cabeza o
+páginas con códigos difíciles de entender y de mantener. Esta cuestión sin dudas es uno de los
+problemas que trae Ajax a los programadores, sobretodo a los que intentan dar sus primeros pasos.
+Pero herramientas como xajax pueden ayudarnos bastante.
+
+En este artículo vamos a conocer xajax, una clase realizada con PHP que nos permite utilizar Ajax,
+combinado con PHP, para la creación de aplicaciones interactivas, de una manera muy simplificada.
+Con xajax podemos fácilmente ejecutar funciones PHP, que se ejecutan en el servidor, cuando el
+usuario realiza acciones en la página. Luego, los resultados de esas funciones PHP se producen en
+la misma página, sin que se tenga que recargarse.
+
+Xajax es un producto Open Source gratuito y compatible con los navegadores más comunes, como
+Firefox, u otros navegadores basados en Mozilla, Internet Explorer, Opera, etc.
+
+Podemos encontrarlo en http://xajaxproject.org
+
+Hacer unas primeras pruebas para comenzar a conocer la herramienta nos llevará pocos minutos.
+Lo veremos a continuación.
+
+Descargar e instalar xajax
+
+Para probar xajax debemos descargar la última versión de la clase, que podemos descargar
+directamente desde su página web: http://xajaxproject.org
+
+Obtendremos un archivo comprimido que debemos descomprimir en cualquier lugar de nuestro espacio de
+publicación. Por ejemplo, podemos crear un directorio llamado xajax donde podemos colocar todos los
+archivos del .zip descargado.
+
+No hay que hacer especiales acciones para instalar xajax, simplemente descomprimirlo en cualquier
+servidor Apache o IIS que tenga compatibilidad con PHP 4.3.x o PHP 5.x, o superiores.
+
+Una vez descargado podemos probar los ejemplos que vienen en el directorio examples, siempre a 
+través de nuestro servidor web compatible con PHP, ya sea en local o en un servidor web remoto.
+
+Atención al directorio donde finalmente metemos los archivos de xajax, pues luego tendremos que 
+incluir archivos que hay en dicho directorio, para lo cual deberemos recordar la ruta relativa
+desde la página donde estemos al directorio donde está xajax.
+
+Página simple con xajax y PHP
+
+Veamos ahora como realizar una página que utilice xajax, para ejecutar una sencilla función PHP
+como respuesta a una acción del usuario. El ejemplo es relativamente sencillo, incluso lo podemos
+hacer en pocos pasos, como una receta. Luego se podrá complicar todo lo necesario para realizar
+acciones más complejas.
+
+1) Incluir con PHP el archivo donde está la clase xajax
+
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+2) Creamos una instancia de un objeto de la clase xajax
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+
+3) Escribimos una función en PHP, que luego llamaremos con por medio de ajax
+
+Esta función es todo lo complicado que se requiera. Realizará acciones del lado del servidor y por
+tanto puede acceder a bases de datos, abrir ficheros o cualquier cosa que se nos ocurra. Luego en
+la propia función realizaremos una instancia de un objeto AjaxResponse, que utilizaremos para
+mostrar resultados en la página.
+
+function si_no($entrada){
+   if ($entrada=="true"){
+       $salida = "Marcado";
+   }else{
+       $salida = "No marcado";
+   }
+
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("respuesta","innerHTML",$salida);
+
+    //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+
+El objeto xajaxResponse() sirve para realizar acciones en la página sin tener que recargar el
+documento. Dispone de varios métodos o funciones, como por ejemplo addAssign() que sirve para
+asignar un valor a una propiedad de un elemento de la página. En este caso se asigna el valor
+contenido en la variable $salida al innerHTML de la capa "respuesta", con lo que se altera el
+texto contenido en esa capa.
+
+4) Asociamos la función PHP al objeto xajax
+
+//asociamos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("si_no");
+
+Esta asociación permitirá ejecutar la función PHP desde una llamada a una función Javascript.
+
+5) Antes de enviar cualquier contenido a la página, tenemos que ejecutar un método del objeto
+xajax para procesar las peticiones del que puedan llegar a la página.
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+
+Insistimos, esta llamada al método se tiene que hacer antes de escribir ningún contenido dentro
+del código de la página, es decir, antes que llegue al cliente ningún carácter de código HTML.
+
+6) Escribir el código javascript necesario para procesar las llamadas a ajax.
+
+//En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+$xajax->printJavascript("xajax/");
+
+Lo ideal es hacer esta llamada al método printJavascript() dentro del <head> de la página.
+
+Si nos fijamos, el método recibe un parámetro, que es la ruta relativa para acceder al directorio
+donde están los archivos xajax descomprimidos.
+
+7) Podemos hacer llamadas a las funciones PHP en cualquier lugar del código, como respuesta a las
+acciones del usuario con javascript.
+
+<input type="checkbox" name="si" value="1" onclick="xajax_si_no(document.formulario.si.checked)">
+Como podemos ver, desde un elemento de la página, como en este caso una casilla de verificación,
+al cambiar su estado, se llama a una función javascript para ejecutar la función PHP escrita
+anteriormente. Es decir, al pulsar el chechbox se desencadena el evento onchange y con él se llama
+a la función xajax_si_no() enviándo como parámetro el estado (chequeado o no) de la casilla de
+verificación.
+
+Con esto es todo tenemos todo lo necesario para entender el ejemplo. Podemos verlo en ejecución en
+una página aparte.
+
+Podemos ver el código del ejemplo completo a continuación, pero tener en cuenta que para que
+funcione tiene que disponer del código de la clase xajax, que en este caso debe estar en un
+subdirectorio que cuelgue del directorio donde está el archivo del ejemplo.
+
+<?
+//incluímos la clase ajax
+require ('xajax/xajax.inc.php');
+
+//instanciamos el objeto de la clase xajax
+$xajax = new xajax();
+
+function si_no($entrada){
+   if ($entrada=="true"){
+       $salida = "Marcado";
+   }else{
+       $salida = "No marcado";
+   }
+
+   //instanciamos el objeto para generar la respuesta con ajax
+   $respuesta = new xajaxResponse();
+   //escribimos en la capa con id="respuesta" el texto que aparece en $salida
+   $respuesta->addAssign("respuesta","innerHTML",$salida);
+
+   //tenemos que devolver la instanciación del objeto xajaxResponse
+   return $respuesta;
+}
+
+//asociamos la función creada anteriormente al objeto xajax
+$xajax->registerFunction("si_no");
+
+//El objeto xajax tiene que procesar cualquier petición
+$xajax->processRequests();
+?>
+
+<html>
+<head>
+   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html;charset=ISO-8859-1">
+   <title>Si / No en Ajax</title>
+   <?
+   //En el <head> indicamos al objeto xajax se encargue de generar el javascript necesario
+   $xajax->printJavascript("xajax/");
+   ?>
+</head>
+
+<body>
+<div id="respuesta"></div>
+<form name="formulario">
+<input type="checkbox" name="si" value="1" onclick="xajax_si_no(document.formulario.si.checked)">
+</form>
+
+<script type="text/javascript">
+   xajax_si_no(document.formulario.si.checked); /*Llamando inicialmente a la función xajax_si_no
+inicializamos el valor de la capa con la respuesta*/
+   </script>
+</body>
+</html>
